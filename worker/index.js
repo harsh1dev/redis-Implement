@@ -1,0 +1,36 @@
+const redis = require('redis');
+
+
+const client = redis.createClient();
+
+async function processSubmission(submission) {
+    const { problemId, code, language } = JSON.parse(submission);
+
+    console.log(`Processing  ${problemId}...`);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log(`Finished ${problemId}.`);
+
+
+    console.log("");
+}
+
+async function startWorker() {
+
+    try {
+        await client.connect();
+        console.log("Worker connected to Redis.");
+
+        while (true) {
+            try {
+                const submission = await client.brPop("problems", 0);
+                await processSubmission(submission.element);
+            } catch (error) {
+                console.error("Error processing submission:", error);
+            }
+        }
+    } catch (error) {
+        console.error("Failed to connect to Redis", error);
+    }
+}
+
+startWorker();
